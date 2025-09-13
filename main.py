@@ -3,8 +3,9 @@ from busca import BuscaEmGrafo, Grafo, Node
 
 test_text = []
 
-with open("test.txt", "r") as file:
+with open("test2.txt", "r") as file:
     test_text = file.readlines()
+
 
 def parse_graph(text: list[str]):
     grafo: Grafo = []
@@ -21,6 +22,7 @@ def parse_graph(text: list[str]):
         if parts:
             grafo.append(parts)
     return grafo, nos
+
 
 grafo, nos = parse_graph(test_text)
 
