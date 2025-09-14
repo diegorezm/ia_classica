@@ -1,5 +1,5 @@
 from typing import List
-from busca import BuscaEmGrafo, Grafo, Node
+from busca import BuscaEmGrafo, Grafo
 
 test_text = []
 
@@ -12,13 +12,13 @@ def parse_graph(text: list[str]):
     nos: List[str] = []
 
     for line in text:
-        l = line.split(",")
-        estado = l.pop(0).strip()
+        line_split = line.split(",")
+        estado = line_split.pop(0).strip()
 
         if estado not in nos:
             nos.append(estado)
 
-        parts: List[str] = [p.strip() for p in l]
+        parts: List[str] = [p.strip() for p in line_split]
         if parts:
             grafo.append(parts)
     return grafo, nos
@@ -27,6 +27,8 @@ def parse_graph(text: list[str]):
 grafo, nos = parse_graph(test_text)
 
 b = BuscaEmGrafo()
+
+print(f"NOS: {nos}")
 
 inicio = input("INICIO: ").strip().upper()
 fim = input("FIM: ").strip().upper()
