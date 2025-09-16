@@ -41,4 +41,8 @@
     <strong>Resultado:</strong> {{ result }}
   </div>
 {% endif %}
+{% if img %}
+  <h3>Mapa:</h3>
+  <img src="data:image/png;base64,{{ img }}" />
+{% endif %}
 {% endblock %}

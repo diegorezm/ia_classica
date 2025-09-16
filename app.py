@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request
 from typing import List
 from busca import BuscaEmGrafo, Grafo
+from draw import draw_graph
 
 app = Flask(__name__)
 
@@ -32,6 +33,8 @@ b = BuscaEmGrafo()
 @app.route("/", methods=["GET", "POST"])
 def index():
     result = None
+    img = None
+    path = None
 
     if request.method == "POST":
         inicio = request.form.get("inicio").strip().upper()
@@ -40,21 +43,26 @@ def index():
         algoritmo = request.form.get("algoritmo")
 
         if algoritmo == "amplitude":
-            result = b.amplitude(inicio, fim, nos, grafo)
+            path = b.amplitude(inicio, fim, nos, grafo)
         elif algoritmo == "profundidade":
-            result = b.profundidade(inicio, fim, nos, grafo)
+            path = b.profundidade(inicio, fim, nos, grafo)
         elif algoritmo == "prof_limitada":
-            result = b.prof_limitada(inicio, fim, nos, grafo, 2)
+            path = b.prof_limitada(inicio, fim, nos, grafo, 2)
         elif algoritmo == "aprof_iterativo":
-            result = b.aprof_iterativo(inicio, fim, nos, grafo, 8)
+            path = b.aprof_iterativo(inicio, fim, nos, grafo, 8)
         elif algoritmo == "bidirecional":
-            result = b.bidirecional(inicio, fim, nos, grafo)
+            path = b.bidirecional(inicio, fim, nos, grafo)
         else:
-            result = "Algoritmo não reconhecido."
+            path = []
 
-        print(result)
+        result = path
 
-    return render_template("index.html", nos=nos, result=result)
+        if result is None:
+            result = "Caminho não encontrado."
+
+    img = draw_graph(nos, grafo, path)
+
+    return render_template("index.html", nos=nos, result=result, img=img)
 
 
 if __name__ == "__main__":
