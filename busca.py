@@ -126,6 +126,9 @@ class BuscaEmGrafo:
                         fila2.append(filho)
         return None
 
+    def custo_uniforme(self, inicio, fim, nos: List[Any], grafo: Grafo):
+        pass
+
     """
     Método privado que faz a busca pela árvore.
     """

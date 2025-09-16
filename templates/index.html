@@ -1,7 +1,18 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1 class="mb-4">Busca em Grafo</h1>
+<h1 class="mb-4">Busca</h1>
+
+{% if img %}
+  <h3>Mapa:</h3>
+  <img src="data:image/png;base64,{{ img }}" />
+{% endif %}
+
+{% if result %}
+  <div class="alert alert-info mt-4">
+    <strong>Resultado:</strong> {{ result }}
+  </div>
+{% endif %}
 
 <form method="POST">
   <div class="mb-3">
@@ -24,7 +35,7 @@
 
   <div class="mb-3">
     <label for="algoritmo" class="form-label">Algoritmo</label>
-    <select name="algoritmo" id="algoritmo" class="form-select">
+    <select name="algoritmo" id="algoritmo" class="form-select" onchange="toggleLimit()">
       <option value="amplitude">Amplitude</option>
       <option value="profundidade">Profundidade</option>
       <option value="prof_limitada">Profundidade Limitada</option>
@@ -33,16 +44,33 @@
     </select>
   </div>
 
+  <div class="mb-3" id="limit-input" style="display:none;">
+    <label for="lim" class="form-label">Limite (lim / lim_max)</label>
+    <input type="number" name="lim" id="lim" class="form-control" min="1" value="2">
+  </div>
+
   <button type="submit" class="btn btn-primary">Encontrar Caminho</button>
 </form>
 
-{% if result %}
-  <div class="alert alert-info mt-4">
-    <strong>Resultado:</strong> {{ result }}
-  </div>
-{% endif %}
-{% if img %}
-  <h3>Mapa:</h3>
-  <img src="data:image/png;base64,{{ img }}" />
-{% endif %}
+<script>
+function toggleLimit() {
+  const algoritmo = document.getElementById("algoritmo").value;
+  const limitInput = document.getElementById("limit-input");
+
+  if (algoritmo === "prof_limitada" || algoritmo === "aprof_iterativo") {
+    limitInput.style.display = "block";
+    if(algoritmo === "aprof_iterativo"){
+      limitInput.value = 4
+    } else {
+
+      limitInput.value = 2
+    }
+  } else {
+    limitInput.style.display = "none";
+  }
+}
+
+toggleLimit();
+</script>
+
 {% endblock %}

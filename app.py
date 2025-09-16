@@ -1,27 +1,8 @@
 from flask import Flask, render_template, request
-from typing import List
-from busca import BuscaEmGrafo, Grafo
-from draw import draw_graph
+from busca import BuscaEmGrafo
+from utils import draw_graph, parse_graph
 
 app = Flask(__name__)
-
-
-def parse_graph(text: list[str]):
-    grafo: Grafo = []
-    nos: List[str] = []
-
-    for line in text:
-        line_split = line.split(",")
-        estado = line_split.pop(0).strip()
-
-        if estado not in nos:
-            nos.append(estado)
-
-        parts: List[str] = [p.strip() for p in line_split]
-        if parts:
-            grafo.append(parts)
-    return grafo, nos
-
 
 with open("test2.txt", "r") as file:
     test_text = file.readlines()
@@ -39,6 +20,7 @@ def index():
     if request.method == "POST":
         inicio = request.form.get("inicio").strip().upper()
         fim = request.form.get("fim").strip().upper()
+        lim = request.form.get("lim", type=int)
 
         algoritmo = request.form.get("algoritmo")
 
@@ -47,9 +29,9 @@ def index():
         elif algoritmo == "profundidade":
             path = b.profundidade(inicio, fim, nos, grafo)
         elif algoritmo == "prof_limitada":
-            path = b.prof_limitada(inicio, fim, nos, grafo, 2)
+            path = b.prof_limitada(inicio, fim, nos, grafo, lim=lim if lim else 2)
         elif algoritmo == "aprof_iterativo":
-            path = b.aprof_iterativo(inicio, fim, nos, grafo, 8)
+            path = b.aprof_iterativo(inicio, fim, nos, grafo, lim_max=lim if lim else 4)
         elif algoritmo == "bidirecional":
             path = b.bidirecional(inicio, fim, nos, grafo)
         else:
