@@ -35,6 +35,13 @@ fim = input("FIM: ").strip().upper()
 
 amp_caminho = b.amplitude(inicio, fim, nos, grafo)
 prof_caminho = b.profundidade(inicio, fim, nos, grafo)
+prof_caminho_lim = b.prof_limitada(inicio, fim, nos, grafo, 2)
+prof_caminho_ai = b.aprof_iterativo(inicio, fim, nos, grafo, 8)
+bidirecional = b.bidirecional(inicio, fim, nos, grafo)
+
 
 print(f"AMPLITUDE: {amp_caminho}")
 print(f"PROFUNDIDADE: {prof_caminho}")
+print(f"PROF_LIM: {prof_caminho_lim}")
+print(f"AI: {prof_caminho_ai}")
+print(f"BI: {bidirecional}")

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="mb-4">Busca em Grafo</h1>
+
+<form method="POST">
+  <div class="mb-3">
+    <label for="inicio" class="form-label">Início</label>
+    <select name="inicio" id="inicio" class="form-select">
+      {% for no in nos %}
+        <option value="{{ no }}">{{ no }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="fim" class="form-label">Objetivo</label>
+    <select name="fim" id="fim" class="form-select">
+      {% for no in nos %}
+        <option value="{{ no }}">{{ no }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label for="algoritmo" class="form-label">Algoritmo</label>
+    <select name="algoritmo" id="algoritmo" class="form-select">
+      <option value="amplitude">Amplitude</option>
+      <option value="profundidade">Profundidade</option>
+      <option value="prof_limitada">Profundidade Limitada</option>
+      <option value="aprof_iterativo">Aprofundamento Iterativo</option>
+      <option value="bidirecional">Bidirecional</option>
+    </select>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Encontrar Caminho</button>
+</form>
+
+{% if result %}
+  <div class="alert alert-info mt-4">
+    <strong>Resultado:</strong> {{ result }}
+  </div>
+{% endif %}
+{% endblock %}
