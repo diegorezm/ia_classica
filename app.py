@@ -38,11 +38,11 @@ def index():
         elif algoritmo == "custo_uniforme":
             path, custo = b.custo_uniforme(inicio, fim, nos, grafo, custos)
         elif algoritmo == "greedy":
-            path = b.greedy(inicio, fim, nos, grafo, custos)
+            path = b.greedy(inicio, fim, nos, grafo)
         elif algoritmo == "a*":
-            path, custo = b.a_estrela(inicio, fim, nos, grafo, custos)
+            path = b.a_estrela(inicio, fim, nos, grafo, custos)
         elif algoritmo == "aia*":
-            path = b.ida_star(inicio, fim, nos, grafo, custos)
+            path, _ = b.aia_estrela(inicio, fim, nos, grafo, custos)
         else:
             path = []
 

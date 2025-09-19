@@ -163,8 +163,8 @@ class BuscaEmGrafo:
                         heapq.heappush(fila, (novo_custo, vizinho))
         return None, None
 
-    def greedy(self, inicio, fim, nos: List[Any], grafo: Grafo, custos: Custo):
-        aberto = [(self.heuristica(inicio, fim, custos), inicio)]
+    def greedy(self, inicio, fim, nos: List[Any], grafo: Grafo):
+        aberto = [(self.__heuristica(), inicio)]
         heapq.heapify(aberto)
 
         pais: Dict[str, Optional[str]] = {inicio: None}
@@ -184,21 +184,21 @@ class BuscaEmGrafo:
             for vizinho in grafo[ind]:
                 if vizinho not in visitados:
                     pais[vizinho] = atual
-                    heapq.heappush(
-                        aberto, (self.heuristica(vizinho, fim, custos), vizinho)
-                    )
+                    heapq.heappush(aberto, (self.__heuristica(), vizinho))
         return None
 
     def a_estrela(self, inicio, fim, nos: List[Any], grafo: Grafo, custos: Custo):
-        abertos = [(self.heuristica(inicio, fim, custos), 0, inicio)]
+        abertos = [(0, inicio)]
         heapq.heapify(abertos)
 
         pais: Dict[str, Optional[str]] = {inicio: None}
-        custos_no = {inicio: 0}
+        gs = {inicio: 0}
+        ## TODO: Heuristica
+        fs = {inicio: self.__heuristica()}
         visitados = set()
 
         while abertos:
-            _, g_atual, atual = heapq.heappop(abertos)
+            _, atual = heapq.heappop(abertos)
 
             if atual in visitados:
                 continue
@@ -206,54 +206,56 @@ class BuscaEmGrafo:
             visitados.add(atual)
 
             if atual == fim:
-                return self.__reconstruir_caminho(pais, fim), g_atual
+                return self.__reconstruir_caminho(pais, fim)
 
             ind = nos.index(atual)
 
             for vizinho in grafo[ind]:
+                custo_aresta = (
+                    custos[(atual, vizinho)]
+                    if (atual, vizinho) in custos
+                    else custos[(vizinho, atual)]
+                )
+                g_novo = gs[atual] + custo_aresta
+                if vizinho not in gs or g_novo < gs.get(vizinho, float("inf")):
+                    gs[vizinho] = g_novo
+                    pais[vizinho] = atual
+                    f_novo = g_novo + self.__heuristica()
+                    fs[vizinho] = f_novo
+                    heapq.heappush(abertos, (g_novo, vizinho))
+
+        return None
+
+    def aia_estrela(self, inicio, fim, nos: List[Any], grafo: Grafo, custos: Custo):
+        abertos = [(0, inicio)]
+        heapq.heapify(abertos)
+
+        pais: Dict[str, Optional[str]] = {inicio: None}
+        custos_no = {inicio: 0}
+        melhor_solucao = None
+        melhor_custo = float("inf")
+
+        while abertos:
+            f_atual, atual = heapq.heappop(abertos)
+
+            if atual == fim:
+                caminho = self.__reconstruir_caminho(pais, fim)
+                if f_atual < melhor_custo:
+                    melhor_custo = f_atual
+                    melhor_solucao = caminho
+                    return melhor_solucao, melhor_custo
+
+            ind = nos.index(atual)
+            for vizinho in grafo[ind]:
                 custo_aresta = custos[(atual, vizinho)]
-                g_novo = g_atual + custo_aresta
-                f_novo = g_novo + self.heuristica(vizinho, fim, custos)
+                g_novo = custos_no[atual] + custo_aresta
+                f_novo = g_novo + self.__heuristica()
+
                 if vizinho not in custos_no or g_novo < custos_no[vizinho]:
                     custos_no[vizinho] = g_novo
                     pais[vizinho] = atual
-                    heapq.heappush(abertos, (f_novo, g_novo, vizinho))
-
-        return None, float("inf")
-
-    def ida_star(self, inicio, fim, nos: List[Any], grafo: Grafo, custos: Custo):
-        limite = self.heuristica(inicio, fim, custos)
-
-        def dfs(atual, g_atual, limite, pais, visitados):
-            f_atual = g_atual + self.heuristica(atual, fim, custos)
-            if f_atual > limite:
-                return f_atual
-            if atual == fim:
-                return True
-            visitados.add(atual)
-            min_excedido = float("inf")
-            ind = nos.index(atual)
-            for vizinho in grafo[ind]:
-                if vizinho not in visitados:
-                    pais[vizinho] = atual
-                    custo_aresta = custos[(atual, vizinho)]
-                    res = dfs(vizinho, g_atual + custo_aresta, limite, pais, visitados)
-                    if res is True:
-                        return True
-                    if res < min_excedido:
-                        min_excedido = res
-            visitados.remove(atual)
-            return min_excedido
-
-        while True:
-            pais: Dict[str, Optional[str]] = {inicio: None}
-            visitados = set()
-            res = dfs(inicio, 0, limite, pais, visitados)
-            if res is True:
-                return self.__reconstruir_caminho(pais, fim)
-            if res == float("inf"):
-                return None
-            limite = res
+                    heapq.heappush(abertos, (f_novo, vizinho))
+        return melhor_solucao, melhor_custo
 
     """
     Método privado que faz a busca pela árvore.
@@ -307,27 +309,8 @@ class BuscaEmGrafo:
                                 return self.exibirCaminho(filho)
         return None
 
-    # Considerando que os custos entre cada nó é a mesma coisa que a distancia entre eles, esta função
-    # retorna o custo total de ir de um nó para outro
-    def heuristica(self, inicio, fim, custos: Custo):
-        fila = deque()
-        fila.append((inicio, 0))
-
-        visitados = set()
-
-        while fila:
-            atual, custo_acc = fila.popleft()
-            if atual == fim:
-                return custo_acc
-            for (n1, n2), custo in custos.items():
-                if n1 == atual and n2 not in visitados:
-                    fila.append((n2, custo_acc + custo))
-                elif n2 == atual and n1 not in visitados:
-                    fila.append((n1, custo_acc + custo))
-
-            visitados.add(atual)
-
-        return float("inf")
+    def __heuristica(self):
+        return 0
 
     def __reconstruir_caminho(
         self, pais: Dict[str, Optional[str]], destino: str
