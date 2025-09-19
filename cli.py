@@ -1,20 +1,13 @@
-from utils import parse_graph
+from utils import parse_json_graph
 
 from busca import BuscaEmGrafo
 
-test_text = []
-
-with open("test2.txt", "r") as file:
-    test_text = file.readlines()
-
 
 def main():
-    # Load graph from file
-    with open("test2.txt", "r") as file:
-        test_text = file.readlines()
-
-    grafo, nos = parse_graph(test_text)
+    grafo, nos, custos = parse_json_graph("data.json")
     b = BuscaEmGrafo()
+
+    print(grafo)
 
     print("Nós disponíveis:", ", ".join(nos))
 
@@ -38,6 +31,9 @@ def main():
 
     bidirecional = b.bidirecional(inicio, fim, nos, grafo)
     print(f"BIDIRECIONAL: {bidirecional}")
+
+    custoUniforme, custo = b.custo_uniforme(inicio, fim, nos, grafo, custos)
+    print(f"CUSTO UNIFORME: {custoUniforme}\t CUSTO: {custo}")
 
 
 if __name__ == "__main__":

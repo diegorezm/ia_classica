@@ -1,5 +1,6 @@
+import heapq
 from collections import deque
-from typing import Optional, List, Any
+from typing import Dict, Optional, List, Any, Tuple
 
 
 class Node:
@@ -33,6 +34,8 @@ class Node:
 
 Grafo = List[List[Any]]
 Busca = Optional[List[Optional[Node]]]
+# ex. {(A,B): 4} ou conexão entre A e B tem custo 4
+Custo = Dict[Tuple[str, str], int]
 
 
 class BuscaEmGrafo:
@@ -126,8 +129,131 @@ class BuscaEmGrafo:
                         fila2.append(filho)
         return None
 
-    def custo_uniforme(self, inicio, fim, nos: List[Any], grafo: Grafo):
-        pass
+    def custo_uniforme(self, inicio, fim, nos: List[Any], grafo: Grafo, custos: Custo):
+        # custo, atual
+        fila = [(0, inicio)]
+        heapq.heapify(fila)
+
+        custos_no = {inicio: 0}
+        pais: Dict[str, Optional[str]] = {inicio: None}
+        visitados = set()
+
+        while fila:
+            custo_atual, atual = heapq.heappop(fila)
+
+            if atual in visitados:
+                continue
+
+            visitados.add(atual)
+
+            if atual == fim:
+                caminho = self.__reconstruir_caminho(pais, fim)
+                return caminho, custo_atual
+
+            ind = nos.index(atual)
+
+            filhos = self.__sucessores(ind, grafo, 1)
+            for vizinho in filhos:
+                if vizinho not in visitados:
+                    custo_aresta = custos[(atual, vizinho)]
+                    novo_custo = custo_atual + custo_aresta
+                    if vizinho not in custos_no or novo_custo < custos_no[vizinho]:
+                        custos[vizinho] = novo_custo
+                        pais[vizinho] = atual
+                        heapq.heappush(fila, (novo_custo, vizinho))
+        return None, None
+
+    def greedy(self, inicio, fim, nos: List[Any], grafo: Grafo, custos: Custo):
+        aberto = [(self.heuristica(inicio, fim, custos), inicio)]
+        heapq.heapify(aberto)
+
+        pais: Dict[str, Optional[str]] = {inicio: None}
+        visitados = set()
+
+        while aberto:
+            _, atual = heapq.heappop(aberto)
+
+            if atual in visitados:
+                continue
+
+            if atual == fim:
+                return self.__reconstruir_caminho(pais, fim)
+
+            visitados.add(atual)
+            ind = nos.index(atual)
+            for vizinho in grafo[ind]:
+                if vizinho not in visitados:
+                    pais[vizinho] = atual
+                    heapq.heappush(
+                        aberto, (self.heuristica(vizinho, fim, custos), vizinho)
+                    )
+        return None
+
+    def a_estrela(self, inicio, fim, nos: List[Any], grafo: Grafo, custos: Custo):
+        abertos = [(self.heuristica(inicio, fim, custos), 0, inicio)]
+        heapq.heapify(abertos)
+
+        pais: Dict[str, Optional[str]] = {inicio: None}
+        custos_no = {inicio: 0}
+        visitados = set()
+
+        while abertos:
+            _, g_atual, atual = heapq.heappop(abertos)
+
+            if atual in visitados:
+                continue
+
+            visitados.add(atual)
+
+            if atual == fim:
+                return self.__reconstruir_caminho(pais, fim), g_atual
+
+            ind = nos.index(atual)
+
+            for vizinho in grafo[ind]:
+                custo_aresta = custos[(atual, vizinho)]
+                g_novo = g_atual + custo_aresta
+                f_novo = g_novo + self.heuristica(vizinho, fim, custos)
+                if vizinho not in custos_no or g_novo < custos_no[vizinho]:
+                    custos_no[vizinho] = g_novo
+                    pais[vizinho] = atual
+                    heapq.heappush(abertos, (f_novo, g_novo, vizinho))
+
+        return None, float("inf")
+
+    def ida_star(self, inicio, fim, nos: List[Any], grafo: Grafo, custos: Custo):
+        limite = self.heuristica(inicio, fim, custos)
+
+        def dfs(atual, g_atual, limite, pais, visitados):
+            f_atual = g_atual + self.heuristica(atual, fim, custos)
+            if f_atual > limite:
+                return f_atual
+            if atual == fim:
+                return True
+            visitados.add(atual)
+            min_excedido = float("inf")
+            ind = nos.index(atual)
+            for vizinho in grafo[ind]:
+                if vizinho not in visitados:
+                    pais[vizinho] = atual
+                    custo_aresta = custos[(atual, vizinho)]
+                    res = dfs(vizinho, g_atual + custo_aresta, limite, pais, visitados)
+                    if res is True:
+                        return True
+                    if res < min_excedido:
+                        min_excedido = res
+            visitados.remove(atual)
+            return min_excedido
+
+        while True:
+            pais: Dict[str, Optional[str]] = {inicio: None}
+            visitados = set()
+            res = dfs(inicio, 0, limite, pais, visitados)
+            if res is True:
+                return self.__reconstruir_caminho(pais, fim)
+            if res == float("inf"):
+                return None
+            limite = res
 
     """
     Método privado que faz a busca pela árvore.
@@ -181,15 +307,42 @@ class BuscaEmGrafo:
                                 return self.exibirCaminho(filho)
         return None
 
+    # Considerando que os custos entre cada nó é a mesma coisa que a distancia entre eles, esta função
+    # retorna o custo total de ir de um nó para outro
+    def heuristica(self, inicio, fim, custos: Custo):
+        fila = deque()
+        fila.append((inicio, 0))
+
+        visitados = set()
+
+        while fila:
+            atual, custo_acc = fila.popleft()
+            if atual == fim:
+                return custo_acc
+            for (n1, n2), custo in custos.items():
+                if n1 == atual and n2 not in visitados:
+                    fila.append((n2, custo_acc + custo))
+                elif n2 == atual and n1 not in visitados:
+                    fila.append((n1, custo_acc + custo))
+
+            visitados.add(atual)
+
+        return float("inf")
+
+    def __reconstruir_caminho(
+        self, pais: Dict[str, Optional[str]], destino: str
+    ) -> List[str]:
+        caminho = []
+        atual = destino
+        while atual is not None:
+            caminho.append(atual)
+            atual = pais.get(atual)
+        caminho.reverse()
+        return caminho
+
     """
     Retorna todos os nós que estão conectados ao nó atual.
     """
-
-    def __sucessores(self, ind: int, grafo: Grafo, ordem: int):
-        f = []
-        for suc in grafo[ind][::ordem]:
-            f.append(suc)
-        return f
 
     def exibirCaminho(self, no: Optional[Node]):
         caminho = []
@@ -214,3 +367,9 @@ class BuscaEmGrafo:
         caminho2 = list(reversed(caminho2[:-1]))
 
         return caminho1 + caminho2
+
+    def __sucessores(self, ind: int, grafo: Grafo, ordem: int):
+        f = []
+        for suc in grafo[ind][::ordem]:
+            f.append(suc)
+        return f

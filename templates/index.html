@@ -1,56 +1,78 @@
+
 {% extends "base.html" %}
 
 {% block content %}
-<h1 class="mb-4">Busca</h1>
+<div class="container-fluid overlflow-y-hidden">
+  <div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-3 col-lg-3 bg-light p-3 border-end" style="height: 100vh;">
+      <h4 class="mb-3">Configurações</h4>
+      <form method="POST">
+        <div class="mb-3">
+          <label for="inicio" class="form-label">Início</label>
+          <select name="inicio" id="inicio" class="form-select">
+            {% for no in nos %}
+              <option value="{{ no }}">{{ no }}</option>
+            {% endfor %}
+          </select>
+        </div>
 
-{% if img %}
-  <h3>Mapa:</h3>
-  <img src="data:image/png;base64,{{ img }}" />
-{% endif %}
+        <div class="mb-3">
+          <label for="fim" class="form-label">Objetivo</label>
+          <select name="fim" id="fim" class="form-select">
+            {% for no in nos %}
+              <option value="{{ no }}">{{ no }}</option>
+            {% endfor %}
+          </select>
+        </div>
 
-{% if result %}
-  <div class="alert alert-info mt-4">
-    <strong>Resultado:</strong> {{ result }}
+        <div class="mb-3">
+          <label for="algoritmo" class="form-label">Algoritmo</label>
+          <select name="algoritmo" id="algoritmo" class="form-select" onchange="toggleLimit()">
+            <option value="amplitude">Amplitude</option>
+            <option value="profundidade">Profundidade</option>
+            <option value="prof_limitada">Profundidade Limitada</option>
+            <option value="aprof_iterativo">Aprofundamento Iterativo</option>
+            <option value="bidirecional">Bidirecional</option>
+            <option value="custo_uniforme">Custo Uniforme</option>
+            <option value="greedy">Greedy</option>
+            <option value="a*">A*</option>
+            <option value="aia*">AIA*</option>
+          </select>
+        </div>
+
+        <div class="mb-3" id="limit-input" style="display:none;">
+          <label for="lim" class="form-label">Limite (lim / lim_max)</label>
+          <input type="number" name="lim" id="lim" class="form-control" min="1" value="2">
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Encontrar Caminho</button>
+      </form>
+    </div>
+
+    <!-- Main content -->
+    <div class="col-md-9 col-lg-9 p-4">
+      <h1 class="mb-4">Busca</h1>
+
+      {% if result %}
+        <div class="alert alert-info">
+          <strong>Caminho:</strong> {{ result }}
+        </div>
+      {% endif %}
+
+      {% if custo %}
+        <div class="alert alert-info">
+          <strong>Custo:</strong> {{ custo }}
+        </div>
+      {% endif %}
+
+      {% if img %}
+        <h3>Mapa:</h3>
+        <img src="data:image/png;base64,{{ img }}" class="rounded mx-auto d-block img-fluid img-thumbnail" />
+      {% endif %}
+    </div>
   </div>
-{% endif %}
-
-<form method="POST">
-  <div class="mb-3">
-    <label for="inicio" class="form-label">Início</label>
-    <select name="inicio" id="inicio" class="form-select">
-      {% for no in nos %}
-        <option value="{{ no }}">{{ no }}</option>
-      {% endfor %}
-    </select>
-  </div>
-
-  <div class="mb-3">
-    <label for="fim" class="form-label">Objetivo</label>
-    <select name="fim" id="fim" class="form-select">
-      {% for no in nos %}
-        <option value="{{ no }}">{{ no }}</option>
-      {% endfor %}
-    </select>
-  </div>
-
-  <div class="mb-3">
-    <label for="algoritmo" class="form-label">Algoritmo</label>
-    <select name="algoritmo" id="algoritmo" class="form-select" onchange="toggleLimit()">
-      <option value="amplitude">Amplitude</option>
-      <option value="profundidade">Profundidade</option>
-      <option value="prof_limitada">Profundidade Limitada</option>
-      <option value="aprof_iterativo">Aprofundamento Iterativo</option>
-      <option value="bidirecional">Bidirecional</option>
-    </select>
-  </div>
-
-  <div class="mb-3" id="limit-input" style="display:none;">
-    <label for="lim" class="form-label">Limite (lim / lim_max)</label>
-    <input type="number" name="lim" id="lim" class="form-control" min="1" value="2">
-  </div>
-
-  <button type="submit" class="btn btn-primary">Encontrar Caminho</button>
-</form>
+</div>
 
 <script>
 function toggleLimit() {
@@ -59,12 +81,7 @@ function toggleLimit() {
 
   if (algoritmo === "prof_limitada" || algoritmo === "aprof_iterativo") {
     limitInput.style.display = "block";
-    if(algoritmo === "aprof_iterativo"){
-      limitInput.value = 4
-    } else {
-
-      limitInput.value = 2
-    }
+    document.getElementById("lim").value = algoritmo === "aprof_iterativo" ? 4 : 2;
   } else {
     limitInput.style.display = "none";
   }
@@ -72,5 +89,4 @@ function toggleLimit() {
 
 toggleLimit();
 </script>
-
 {% endblock %}
