@@ -1,12 +1,19 @@
 import json
+from warnings import deprecated
 from busca import Grafo, Custo
 from typing import List
 import networkx as nx
+import matplotlib
+
+matplotlib.use(
+    "SVG"
+)  # https://matplotlib.org/stable/users/explain/figure/backends.html#static-backends
 import matplotlib.pyplot as plt
 import io
 import base64
 
 
+@deprecated("Não é utilizado mais.")
 def parse_graph(text: list[str]):
     grafo: Grafo = []
     nos: List[str] = []
@@ -25,6 +32,15 @@ def parse_graph(text: list[str]):
 
 
 def parse_json_graph(json_path: str):
+    """
+    Recebe o caminho para um json e retorna um grafo, uma lista de nós e um dicionário de
+    custos.
+    O formato do json deve ser:
+        Node: {
+            Conexão: Valor
+        }
+    Portando um node deve conter um dicionario com todas as suas conexões e seus respectivos custos.
+    """
     with open(json_path, "r") as f:
         data = json.load(f)
     grafo: Grafo = []
@@ -43,17 +59,20 @@ def parse_json_graph(json_path: str):
 
 
 def draw_graph(nos, grafo, costs=None, path=None):
+    """
+    Retorna uma string base64 que representa o grafo.
+    """
     G = nx.Graph()
 
-    # Build graph
+    # Adicionando as conexões
     for i, estado in enumerate(nos):
         for viz in grafo[i]:
             G.add_edge(estado, viz)
 
     # Layout
-    pos = nx.spring_layout(G, scale=3.0, k=1.0, iterations=50)
+    pos = nx.spring_layout(G, scale=3.0, k=1.0, iterations=50, seed=20)
 
-    # Draw nodes and edges
+    # Desenhando na tela
     nx.draw(
         G,
         pos,
@@ -64,6 +83,8 @@ def draw_graph(nos, grafo, costs=None, path=None):
         font_size=10,
     )
 
+    # Se o dicionario de custos existir, use-o
+    ## TODO: Melhorar a exibição dos custos.
     if costs:
         edge_labels = {}
         for u, v in G.edges():
@@ -72,12 +93,13 @@ def draw_graph(nos, grafo, costs=None, path=None):
             G, pos, edge_labels=edge_labels, font_color="black"
         )
 
+    # Marcando um caminho de vermelho
     if path:
         edges = list(zip(path, path[1:]))
         nx.draw_networkx_nodes(G, pos, nodelist=path, node_color="red")
         nx.draw_networkx_edges(G, pos, edgelist=edges, edge_color="red", width=2)
 
-    # Save to base64
+    # Criando um string base64 para poder exibir o grafo no jinja
     buf = io.BytesIO()
     plt.savefig(buf, format="png")
     buf.seek(0)

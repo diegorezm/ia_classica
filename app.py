@@ -4,9 +4,6 @@ from utils import draw_graph, parse_json_graph
 
 app = Flask(__name__)
 
-with open("test2.txt", "r") as file:
-    test_text = file.readlines()
-
 grafo, nos, custos = parse_json_graph("data.json")
 b = BuscaEmGrafo()
 

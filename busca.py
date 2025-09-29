@@ -164,13 +164,19 @@ class BuscaEmGrafo:
         return None, None
 
     def greedy(self, inicio, fim, nos: List[Any], grafo: Grafo):
+        ## TODO: Heuristica
         aberto = [(self.__heuristica(), inicio)]
         heapq.heapify(aberto)
 
+        # Cria um dicionario de pais, este dicionario será utilizado para
+        # reconstruir o caminho até o destino. (Já que neste caso não é possivel utilizar a classe Node, devido ao uso do heapq)
         pais: Dict[str, Optional[str]] = {inicio: None}
+
+        # Criando um set de nós visitados
         visitados = set()
 
         while aberto:
+            ## TODO: Heuristica
             _, atual = heapq.heappop(aberto)
 
             if atual in visitados:
@@ -181,6 +187,7 @@ class BuscaEmGrafo:
 
             visitados.add(atual)
             ind = nos.index(atual)
+
             for vizinho in grafo[ind]:
                 if vizinho not in visitados:
                     pais[vizinho] = atual
@@ -188,13 +195,13 @@ class BuscaEmGrafo:
         return None
 
     def a_estrela(self, inicio, fim, nos: List[Any], grafo: Grafo, custos: Custo):
+        # fila de prioridade, começa com o nó inicial (custo 0)
         abertos = [(0, inicio)]
         heapq.heapify(abertos)
 
         pais: Dict[str, Optional[str]] = {inicio: None}
-        gs = {inicio: 0}
-        ## TODO: Heuristica
-        fs = {inicio: self.__heuristica()}
+        # Custo acumulado
+        ca = {inicio: 0}
         visitados = set()
 
         while abertos:
@@ -216,22 +223,26 @@ class BuscaEmGrafo:
                     if (atual, vizinho) in custos
                     else custos[(vizinho, atual)]
                 )
-                g_novo = gs[atual] + custo_aresta
-                if vizinho not in gs or g_novo < gs.get(vizinho, float("inf")):
-                    gs[vizinho] = g_novo
+                g_novo = ca[atual] + custo_aresta
+                # Se for a primeira vez que a gente vê esse vizinho
+                # ou se achamos um caminho mais barato até ele, atualiza
+                if vizinho not in ca or g_novo < ca.get(vizinho, float("inf")):
+                    ca[vizinho] = g_novo
                     pais[vizinho] = atual
+                    ## TODO: Heuristica
                     f_novo = g_novo + self.__heuristica()
-                    fs[vizinho] = f_novo
-                    heapq.heappush(abertos, (g_novo, vizinho))
-
+                    heapq.heappush(abertos, (f_novo, vizinho))
         return None
 
     def aia_estrela(self, inicio, fim, nos: List[Any], grafo: Grafo, custos: Custo):
+        # fila de prioridade, começa com o nó inicial (custo 0)
         abertos = [(0, inicio)]
         heapq.heapify(abertos)
 
         pais: Dict[str, Optional[str]] = {inicio: None}
         custos_no = {inicio: 0}
+
+        # Melhor solução/custo até agora
         melhor_solucao = None
         melhor_custo = float("inf")
 
@@ -246,6 +257,7 @@ class BuscaEmGrafo:
                     return melhor_solucao, melhor_custo
 
             ind = nos.index(atual)
+
             for vizinho in grafo[ind]:
                 custo_aresta = custos[(atual, vizinho)]
                 g_novo = custos_no[atual] + custo_aresta
