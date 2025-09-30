@@ -5,7 +5,7 @@ from utils import draw_graph, parse_json_graph
 app = Flask(__name__)
 
 grafo, nos, custos = parse_json_graph("data.json")
-b = BuscaEmGrafo()
+b = BuscaEmGrafo(nos, grafo, custos)
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -23,23 +23,30 @@ def index():
         algoritmo = request.form.get("algoritmo")
 
         if algoritmo == "amplitude":
-            path = b.amplitude(inicio, fim, nos, grafo)
+            path, c = b.amplitude(inicio, fim)
+            custo = c
         elif algoritmo == "profundidade":
-            path = b.profundidade(inicio, fim, nos, grafo)
+            path, c = b.profundidade(inicio, fim)
+            custo = c
         elif algoritmo == "prof_limitada":
-            path = b.prof_limitada(inicio, fim, nos, grafo, lim=lim if lim else 2)
+            path, c = b.prof_limitada(inicio, fim, lim=lim if lim else 2)
+            custo = c
         elif algoritmo == "aprof_iterativo":
-            path = b.aprof_iterativo(inicio, fim, nos, grafo, lim_max=lim if lim else 4)
+            path = b.aprof_iterativo(inicio, fim, lim_max=lim if lim else 4)
         elif algoritmo == "bidirecional":
-            path = b.bidirecional(inicio, fim, nos, grafo)
+            path = b.bidirecional(inicio, fim)
         elif algoritmo == "custo_uniforme":
-            path, custo = b.custo_uniforme(inicio, fim, nos, grafo, custos)
+            path, c = b.custo_uniforme(inicio, fim)
+            custo = c
         elif algoritmo == "greedy":
-            path = b.greedy(inicio, fim, nos, grafo)
+            path, c = b.greedy(inicio, fim, nos)
+            custo = c
         elif algoritmo == "a*":
-            path = b.a_estrela(inicio, fim, nos, grafo, custos)
+            path, c = b.a_estrela(inicio, fim, nos)
+            custo = c
         elif algoritmo == "aia*":
-            path, _ = b.aia_estrela(inicio, fim, nos, grafo, custos)
+            path, c = b.aia_estrela(inicio, fim, nos)
+            custo = c
         else:
             path = []
 

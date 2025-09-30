@@ -70,7 +70,7 @@ def draw_graph(nos, grafo, costs=None, path=None):
             G.add_edge(estado, viz)
 
     # Layout
-    pos = nx.spring_layout(G, scale=3.0, k=1.0, iterations=50, seed=20)
+    pos = nx.spring_layout(G, k=1.0, iterations=70, seed=50)
 
     # Desenhando na tela
     nx.draw(
@@ -83,6 +83,12 @@ def draw_graph(nos, grafo, costs=None, path=None):
         font_size=10,
     )
 
+    # Marcando um caminho de vermelho
+    if path:
+        edges = list(zip(path, path[1:]))
+        nx.draw_networkx_nodes(G, pos, nodelist=path, node_color="red")
+        nx.draw_networkx_edges(G, pos, edgelist=edges, edge_color="red", width=2)
+
     # Se o dicionario de custos existir, use-o
     ## TODO: Melhorar a exibição dos custos.
     if costs:
@@ -92,12 +98,6 @@ def draw_graph(nos, grafo, costs=None, path=None):
         nx.draw_networkx_edge_labels(
             G, pos, edge_labels=edge_labels, font_color="black"
         )
-
-    # Marcando um caminho de vermelho
-    if path:
-        edges = list(zip(path, path[1:]))
-        nx.draw_networkx_nodes(G, pos, nodelist=path, node_color="red")
-        nx.draw_networkx_edges(G, pos, edgelist=edges, edge_color="red", width=2)
 
     # Criando um string base64 para poder exibir o grafo no jinja
     buf = io.BytesIO()

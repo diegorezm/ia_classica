@@ -39,23 +39,32 @@ Custo = Dict[Tuple[str, str], int]
 
 
 class BuscaEmGrafo:
-    def profundidade(self, inicio, fim, nos: List[Any], grafo: Grafo):
-        return self.__busca(inicio, fim, nos, grafo, amplitude=False)
+    def __init__(self, nos: List[Any], grafo: Grafo, custos: Optional[Custo] = None):
+        self.nos = nos
+        self.grafo = grafo
+        self.custos = custos if custos is not None else {}
 
-    def amplitude(self, inicio, fim, nos: List[Any], grafo: Grafo):
-        return self.__busca(inicio, fim, nos, grafo, amplitude=True)
+    def profundidade(self, inicio, fim):
+        return self.__busca(inicio, fim, amplitude=False)
 
-    def prof_limitada(self, inicio, fim, nos: List[Any], grafo: Grafo, lim: int):
-        return self.__busca(inicio, fim, nos, grafo, amplitude=True, lim=lim)
+    def amplitude(
+        self,
+        inicio,
+        fim,
+    ):
+        return self.__busca(inicio, fim, amplitude=True)
 
-    def aprof_iterativo(self, inicio, fim, nos: List[Any], grafo: Grafo, lim_max: int):
+    def prof_limitada(self, inicio, fim, lim: int):
+        return self.__busca(inicio, fim, amplitude=True, lim=lim)
+
+    def aprof_iterativo(self, inicio, fim, lim_max: int):
         for lim in range(1, lim_max):
-            res = self.__busca(inicio, fim, nos, grafo, amplitude=True, lim=lim)
+            res = self.__busca(inicio, fim, amplitude=True, lim=lim)
             if res is not None:
                 return res
         return None
 
-    def bidirecional(self, inicio, fim, nos: List[Any], grafo: Grafo):
+    def bidirecional(self, inicio, fim):
         if inicio == fim:
             return [inicio]
 
@@ -87,8 +96,8 @@ class BuscaEmGrafo:
                 atual = fila1.popleft()
 
                 # Gera sucessores
-                ind = nos.index(atual.estado)
-                filhos = self.__sucessores(ind, grafo, 1)
+                ind = self.nos.index(atual.estado)
+                filhos = self.__sucessores(ind, self.grafo, 1)
 
                 # Gera sucessores a partir do grid
                 # filhos = self.sucessores_grid(atual.estado,nx,ny,mapa) # grid
@@ -115,8 +124,8 @@ class BuscaEmGrafo:
                 atual = fila2.popleft()
 
                 # Gera sucessores
-                ind = nos.index(atual.estado)
-                filhos = self.__sucessores(ind, grafo, 1)
+                ind = self.nos.index(atual.estado)
+                filhos = self.__sucessores(ind, self.grafo, 1)
 
                 for novo in filhos:
                     if novo not in visitado2:
@@ -129,7 +138,7 @@ class BuscaEmGrafo:
                         fila2.append(filho)
         return None
 
-    def custo_uniforme(self, inicio, fim, nos: List[Any], grafo: Grafo, custos: Custo):
+    def custo_uniforme(self, inicio, fim):
         # custo, atual
         fila = [(0, inicio)]
         heapq.heapify(fila)
@@ -150,23 +159,25 @@ class BuscaEmGrafo:
                 caminho = self.__reconstruir_caminho(pais, fim)
                 return caminho, custo_atual
 
-            ind = nos.index(atual)
+            ind = self.nos.index(atual)
 
-            filhos = self.__sucessores(ind, grafo, 1)
+            filhos = self.__sucessores(ind, self.grafo, 1)
             for vizinho in filhos:
                 if vizinho not in visitados:
-                    custo_aresta = custos[(atual, vizinho)]
+                    custo_aresta = self.custos.get((atual, vizinho), 0)
                     novo_custo = custo_atual + custo_aresta
                     if vizinho not in custos_no or novo_custo < custos_no[vizinho]:
-                        custos[vizinho] = novo_custo
+                        # self.custos[vizinho] = novo_custo
                         pais[vizinho] = atual
                         heapq.heappush(fila, (novo_custo, vizinho))
         return None, None
 
-    def greedy(self, inicio, fim, nos: List[Any], grafo: Grafo):
+    def greedy(self, inicio, fim, nos: List[Any]):
         ## TODO: Heuristica
         aberto = [(self.__heuristica(), inicio)]
         heapq.heapify(aberto)
+
+        custos_no = {inicio: 0}
 
         # Cria um dicionario de pais, este dicionario será utilizado para
         # reconstruir o caminho até o destino. (Já que neste caso não é possivel utilizar a classe Node, devido ao uso do heapq)
@@ -183,25 +194,28 @@ class BuscaEmGrafo:
                 continue
 
             if atual == fim:
-                return self.__reconstruir_caminho(pais, fim)
+                return self.__reconstruir_caminho(pais, fim), custos_no[fim]
 
             visitados.add(atual)
             ind = nos.index(atual)
 
-            for vizinho in grafo[ind]:
+            for vizinho in self.grafo[ind]:
                 if vizinho not in visitados:
+                    custo_aresta = self.custos.get((atual, vizinho), 0)
+                    novo_custo = custos_no[atual] + custo_aresta
+                    custos_no[vizinho] = novo_custo
                     pais[vizinho] = atual
                     heapq.heappush(aberto, (self.__heuristica(), vizinho))
-        return None
+        return None, None
 
-    def a_estrela(self, inicio, fim, nos: List[Any], grafo: Grafo, custos: Custo):
+    def a_estrela(self, inicio, fim, nos: List[Any]):
         # fila de prioridade, começa com o nó inicial (custo 0)
         abertos = [(0, inicio)]
         heapq.heapify(abertos)
 
         pais: Dict[str, Optional[str]] = {inicio: None}
         # Custo acumulado
-        ca = {inicio: 0}
+        custos_no = {inicio: 0}
         visitados = set()
 
         while abertos:
@@ -213,28 +227,30 @@ class BuscaEmGrafo:
             visitados.add(atual)
 
             if atual == fim:
-                return self.__reconstruir_caminho(pais, fim)
+                return self.__reconstruir_caminho(pais, fim), custos_no[fim]
 
             ind = nos.index(atual)
 
-            for vizinho in grafo[ind]:
+            for vizinho in self.grafo[ind]:
                 custo_aresta = (
-                    custos[(atual, vizinho)]
-                    if (atual, vizinho) in custos
-                    else custos[(vizinho, atual)]
+                    self.custos[(atual, vizinho)]
+                    if (atual, vizinho) in self.custos
+                    else self.custos[(vizinho, atual)]
                 )
-                g_novo = ca[atual] + custo_aresta
+                g_novo = custos_no[atual] + custo_aresta
                 # Se for a primeira vez que a gente vê esse vizinho
                 # ou se achamos um caminho mais barato até ele, atualiza
-                if vizinho not in ca or g_novo < ca.get(vizinho, float("inf")):
-                    ca[vizinho] = g_novo
+                if vizinho not in custos_no or g_novo < custos_no.get(
+                    vizinho, float("inf")
+                ):
+                    custos_no[vizinho] = g_novo
                     pais[vizinho] = atual
                     ## TODO: Heuristica
                     f_novo = g_novo + self.__heuristica()
                     heapq.heappush(abertos, (f_novo, vizinho))
-        return None
+        return None, None
 
-    def aia_estrela(self, inicio, fim, nos: List[Any], grafo: Grafo, custos: Custo):
+    def aia_estrela(self, inicio, fim, nos: List[Any]):
         # fila de prioridade, começa com o nó inicial (custo 0)
         abertos = [(0, inicio)]
         heapq.heapify(abertos)
@@ -258,8 +274,8 @@ class BuscaEmGrafo:
 
             ind = nos.index(atual)
 
-            for vizinho in grafo[ind]:
-                custo_aresta = custos[(atual, vizinho)]
+            for vizinho in self.grafo[ind]:
+                custo_aresta = self.custo_aresta(atual, vizinho)
                 g_novo = custos_no[atual] + custo_aresta
                 f_novo = g_novo + self.__heuristica()
 
@@ -277,15 +293,14 @@ class BuscaEmGrafo:
         self,
         inicio: Any,
         fim: Any,
-        nos: List[Any],
-        grafo: Grafo,
         amplitude=True,
         lim: Optional[int] = None,
-    ) -> Busca:
+    ):
         if inicio == fim:
             return [inicio]
 
         fila: deque[Node] = deque()
+        custos_no = {inicio: 0}
 
         # Inclui início como nó raíz da árvore de busca
         raiz = Node(None, inicio, 0)  # grafo
@@ -302,10 +317,10 @@ class BuscaEmGrafo:
             ):
                 if atual.estado is not None:
                     # Gera sucessores a partir do grafo
-                    ind = nos.index(atual.estado)  # grafo
+                    ind = self.nos.index(atual.estado)  # grafo
 
                     # Todos os filhos do nó atual
-                    filhos = self.__sucessores(ind, grafo, 1)
+                    filhos = self.__sucessores(ind, self.grafo, 1)
 
                     for novo in filhos:
                         if novo not in visitados:
@@ -317,9 +332,14 @@ class BuscaEmGrafo:
                             filho = Node(atual, novo, p + 1)
                             fila.append(filho)
                             visitados[novo] = filho
+
+                            custo_aresta = self.custos.get((atual.estado, novo), 0)
+                            custos_no[novo] = custos_no[atual.estado] + custo_aresta
+
                             if novo == fim:
-                                return self.exibirCaminho(filho)
-        return None
+                                caminho = self.exibirCaminho(filho)
+                                return caminho, custos_no[novo]
+        return None, None
 
     def __heuristica(self):
         return 0
@@ -362,6 +382,11 @@ class BuscaEmGrafo:
         caminho2 = list(reversed(caminho2[:-1]))
 
         return caminho1 + caminho2
+
+    def custo_aresta(self, a1, a2):
+        return (
+            self.custos[(a1, a2)] if (a1, a2) in self.custos else self.custos[(a2, a1)]
+        )
 
     def __sucessores(self, ind: int, grafo: Grafo, ordem: int):
         f = []
