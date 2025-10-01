@@ -3,7 +3,7 @@
 ## Como executar
 
 1. Crie o ambiente virtual:
-   ```bash
+```bash
    python -m venv venv
 ````
 
