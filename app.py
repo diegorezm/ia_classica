@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request
+
 from busca import BuscaEmGrafo
 from utils import draw_graph, parse_json_graph
 
@@ -23,37 +24,30 @@ def index():
         algoritmo = request.form.get("algoritmo")
 
         if algoritmo == "amplitude":
-            path, c = b.amplitude(inicio, fim)
-            custo = c
+            path, custo = b.amplitude(inicio, fim)
         elif algoritmo == "profundidade":
-            path, c = b.profundidade(inicio, fim)
-            custo = c
+            path, custo = b.profundidade(inicio, fim)
         elif algoritmo == "prof_limitada":
-            path, c = b.prof_limitada(inicio, fim, lim=lim if lim else 2)
-            custo = c
+            path, custo = b.prof_limitada(inicio, fim, lim=lim if lim else 2)
         elif algoritmo == "aprof_iterativo":
-            path = b.aprof_iterativo(inicio, fim, lim_max=lim if lim else 4)
+            path, custo = b.aprof_iterativo(inicio, fim, lim_max=lim if lim else 4)
         elif algoritmo == "bidirecional":
             path = b.bidirecional(inicio, fim)
         elif algoritmo == "custo_uniforme":
-            path, c = b.custo_uniforme(inicio, fim)
-            custo = c
+            path, custo = b.custo_uniforme(inicio, fim)
         elif algoritmo == "greedy":
-            path, c = b.greedy(inicio, fim, nos)
-            custo = c
+            path, custo = b.greedy(inicio, fim, nos)
         elif algoritmo == "a*":
-            path, c = b.a_estrela(inicio, fim, nos)
-            custo = c
+            path, custo = b.a_estrela(inicio, fim, nos)
         elif algoritmo == "aia*":
-            path, c = b.aia_estrela(inicio, fim, nos)
-            custo = c
+            path, custo = b.aia_estrela(inicio, fim, nos)
         else:
             path = []
 
-        result = path
-
-        if result is None:
+        if path is None:
             result = "Caminho não encontrado."
+        else:
+            result = " -> ".join(path)
 
     img = draw_graph(nos, grafo, costs=custos, path=path)
 

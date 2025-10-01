@@ -52,17 +52,19 @@ class BuscaEmGrafo:
         inicio,
         fim,
     ):
-        return self.__busca(inicio, fim, amplitude=True)
+        path, c = self.__busca(inicio, fim, amplitude=True)
+        return path, c
 
     def prof_limitada(self, inicio, fim, lim: int):
-        return self.__busca(inicio, fim, amplitude=True, lim=lim)
+        path, c = self.__busca(inicio, fim, amplitude=True, lim=lim)
+        return path, c
 
     def aprof_iterativo(self, inicio, fim, lim_max: int):
         for lim in range(1, lim_max):
-            res = self.__busca(inicio, fim, amplitude=True, lim=lim)
-            if res is not None:
-                return res
-        return None
+            path, c = self.__busca(inicio, fim, amplitude=True, lim=lim)
+            if path is not None:
+                return path, c
+        return None, None
 
     def bidirecional(self, inicio, fim):
         if inicio == fim:
@@ -297,7 +299,7 @@ class BuscaEmGrafo:
         lim: Optional[int] = None,
     ):
         if inicio == fim:
-            return [inicio]
+            return [inicio], 0
 
         fila: deque[Node] = deque()
         custos_no = {inicio: 0}
