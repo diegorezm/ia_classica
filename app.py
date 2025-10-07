@@ -6,7 +6,7 @@ from utils import gerar_grafo, gerar_problema_json
 
 app = Flask(__name__)
 
-grafo, nos, custos = gerar_problema_json("grafo_20.json")
+grafo, nos, custos = gerar_problema_json("grafo_13.json")
 b = BuscaEmGrafo(nos, grafo, custos)
 bp = BuscaEmGrafoPonderada(nos, grafo, custos)
 
