@@ -2,11 +2,11 @@ from flask import Flask, render_template, request
 
 from busca import BuscaEmGrafo
 from busca_ponderada import BuscaEmGrafoPonderada
-from utils import draw_graph, parse_json_graph
+from utils import gerar_grafo, gerar_problema_json
 
 app = Flask(__name__)
 
-grafo, nos, custos = parse_json_graph("grafo_13.json")
+grafo, nos, custos = gerar_problema_json("grafo_20.json")
 b = BuscaEmGrafo(nos, grafo, custos)
 bp = BuscaEmGrafoPonderada(nos, grafo, custos)
 
@@ -51,7 +51,7 @@ def index():
         else:
             result = " -> ".join(path)
 
-    img = draw_graph(nos, grafo, costs=custos, path=path)
+    img = gerar_grafo(nos, grafo, costs=custos, path=path)
 
     return render_template("index.html", nos=nos, result=result, img=img, custo=custo)
 

@@ -31,7 +31,7 @@ def parse_graph(text: list[str]):
     return grafo, nos
 
 
-def parse_json_graph(json_path: str):
+def gerar_problema_json(json_path: str):
     """
     Recebe o caminho para um json e retorna um grafo, uma lista de nós e um dicionário de
     custos.
@@ -58,7 +58,7 @@ def parse_json_graph(json_path: str):
     return grafo, nos, custos
 
 
-def draw_graph(nos, grafo, costs=None, path=None):
+def gerar_grafo(nos, grafo, costs=None, path=None):
     """
     Retorna uma string base64 que representa o grafo.
     """
