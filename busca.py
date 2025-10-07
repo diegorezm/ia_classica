@@ -43,6 +43,7 @@ class BuscaEmGrafo:
         self.nos = nos
         self.grafo = grafo
         self.custos = custos if custos is not None else {}
+        self.h = self.__gerar_heuristica()
 
     def profundidade(self, inicio, fim):
         return self.__busca(inicio, fim, amplitude=False)
@@ -141,6 +142,8 @@ class BuscaEmGrafo:
         return None
 
     def custo_uniforme(self, inicio, fim):
+        if inicio == fim:
+            return [inicio], 0
         # custo, atual
         fila = [(0, inicio)]
         heapq.heapify(fila)
@@ -175,6 +178,9 @@ class BuscaEmGrafo:
         return None, None
 
     def greedy(self, inicio, fim, nos: List[Any]):
+        if inicio == fim:
+            return [inicio], 0
+
         ## TODO: Heuristica
         aberto = [(self.__heuristica(), inicio)]
         heapq.heapify(aberto)
@@ -277,7 +283,11 @@ class BuscaEmGrafo:
             ind = nos.index(atual)
 
             for vizinho in self.grafo[ind]:
-                custo_aresta = self.custo_aresta(atual, vizinho)
+                custo_aresta = self.custos.get(
+                    (atual, vizinho),
+                    self.custos.get((vizinho, atual), 1),
+                )
+
                 g_novo = custos_no[atual] + custo_aresta
                 f_novo = g_novo + self.__heuristica()
 
@@ -343,9 +353,6 @@ class BuscaEmGrafo:
                                 return caminho, custos_no[novo]
         return None, None
 
-    def __heuristica(self):
-        return 0
-
     def __reconstruir_caminho(
         self, pais: Dict[str, Optional[str]], destino: str
     ) -> List[str]:
@@ -385,10 +392,41 @@ class BuscaEmGrafo:
 
         return caminho1 + caminho2
 
-    def custo_aresta(self, a1, a2):
-        return (
-            self.custos[(a1, a2)] if (a1, a2) in self.custos else self.custos[(a2, a1)]
-        )
+    def __heuristica(self, inicio, destino):
+        i_dest = self.nos.index(destino)
+        i_inicio = self.nos.index(inicio)
+        return self.h[i_dest][i_inicio]
+
+    def __gerar_heuristica(self):
+        matriz = []
+        for destino in self.nos:
+            dist = self.dijkstra(destino)
+            linha = [dist[n] for n in self.nos]
+            matriz.append(linha)
+        return matriz
+
+    def dijkstra(self, inicio: Any):
+        dist = {n: float("inf") for n in self.nos}
+        dist[inicio] = 0
+
+        pq = [(0, inicio)]
+        heapq.heapify(pq)
+
+        while pq:
+            custo_atual, atual = heapq.heappop(pq)
+            ind = self.nos.index(atual)
+            vizinhos = self.__sucessores(ind, self.grafo, 1)
+            for vizinho in vizinhos:
+                custo_aresta = self.custos.get(
+                    (atual, vizinho),
+                    self.custos.get((vizinho, atual), 1),
+                )
+
+                novo_custo = custo_atual + custo_aresta
+                if novo_custo < dist[vizinho]:
+                    dist[vizinho] = novo_custo
+                    heapq.heappush(pq, (novo_custo, vizinho))
+        return dist
 
     def __sucessores(self, ind: int, grafo: Grafo, ordem: int):
         f = []

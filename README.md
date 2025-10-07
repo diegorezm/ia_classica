@@ -1,4 +1,8 @@
 # Projeto Flask
+Versão do python:
+`
+Python 3.13.7
+`
 
 ## Como executar
 
