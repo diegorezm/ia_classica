@@ -6,7 +6,7 @@ from utils import draw_graph, parse_json_graph
 
 app = Flask(__name__)
 
-grafo, nos, custos = parse_json_graph("data.json")
+grafo, nos, custos = parse_json_graph("grafo_13.json")
 b = BuscaEmGrafo(nos, grafo, custos)
 bp = BuscaEmGrafoPonderada(nos, grafo, custos)
 
