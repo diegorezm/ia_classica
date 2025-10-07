@@ -1,12 +1,14 @@
 from flask import Flask, render_template, request
 
 from busca import BuscaEmGrafo
+from busca_ponderada import BuscaEmGrafoPonderada
 from utils import draw_graph, parse_json_graph
 
 app = Flask(__name__)
 
 grafo, nos, custos = parse_json_graph("data.json")
 b = BuscaEmGrafo(nos, grafo, custos)
+bp = BuscaEmGrafoPonderada(nos, grafo, custos)
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -34,13 +36,13 @@ def index():
         elif algoritmo == "bidirecional":
             path = b.bidirecional(inicio, fim)
         elif algoritmo == "custo_uniforme":
-            path, custo = b.custo_uniforme(inicio, fim)
+            path, custo = bp.custo_uniforme(inicio, fim)
         elif algoritmo == "greedy":
-            path, custo = b.greedy(inicio, fim, nos)
+            path, custo = bp.greedy(inicio, fim, nos)
         elif algoritmo == "a*":
-            path, custo = b.a_estrela(inicio, fim, nos)
+            path, custo = bp.a_estrela(inicio, fim, nos)
         elif algoritmo == "aia*":
-            path, custo = b.aia_estrela(inicio, fim, nos)
+            path, custo = bp.aia_estrela(inicio, fim, nos)
         else:
             path = []
 
